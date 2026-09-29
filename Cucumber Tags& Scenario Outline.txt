@@ -1,0 +1,657 @@
+cucumber
+==========
+Chapter 2: Cucumber Components
+
+2.1 Understanding Cucumber’s Core Components
+
+Cucumber works by connecting plain English feature files with Java step definitions and executing them through a runner class. Let’s break down the main components:
+
+Feature File → Written in Gherkin, describes the behavior.
+
+Step Definitions → Java methods that implement the steps.
+
+Runner Class → Executes the scenarios using JUnit/TestNG.
+
+Glue Code → Links feature files to step definitions.
+
+Plugins → Generate reports (HTML, JSON, etc.).
+
+2.2 Feature File Example
+
+gherkin
+
+Feature: Search functionality
+
+Scenario: Search for a product
+
+Given the user is on the homepage
+
+When the user searches for "Laptop"
+
+Then the search results should display laptops
+
+Explanation:
+
+The Feature describes the functionality (search).
+
+The Scenario defines one test case.
+
+Steps (Given, When, Then) describe the behavior in plain English.
+
+2.3 Step Definitions
+
+java
+
+import io.cucumber.java.en.*;
+
+public class SearchSteps {
+
+@Given("the user is on the homepage")
+
+public void userOnHomepage() {
+
+System.out.println("User navigates to homepage...");
+
+}
+
+@When("the user searches for {string}")
+
+public void userSearchesForProduct(String product) {
+
+System.out.println("Searching for: " + product);
+
+}
+
+@Then("the search results should display laptops")
+
+public void searchResultsDisplay() {
+
+System.out.println("Results show laptops!");
+
+}
+
+}
+
+Explanation:
+
+{string} → Parameter placeholder in step definitions.
+
+Each Gherkin step is mapped to a Java method.
+
+The methods contain the automation logic (here, just System.out.println for demo).
+
+2.4 Runner Class
+
+java
+
+import org.junit.runner.RunWith;
+
+import io.cucumber.junit.Cucumber;
+
+import io.cucumber.junit.CucumberOptions;
+
+@RunWith(Cucumber.class)
+
+@CucumberOptions(
+
+features = "src/test/resources/features",
+
+glue = {"stepDefinitions"},
+
+plugin = {"pretty", "html:target/cucumber-report.html"}
+
+)
+
+public class SearchTestRunner {
+
+}
+
+Explanation:
+
+features → Path to feature files.
+
+glue → Path to step definitions.
+
+plugin → Reporting options.
+
+2.5 Glue Code
+
+Glue code is the bridge between feature files and step definitions.
+
+If feature files are in src/test/resources/features, and step definitions are in src/test/java/stepDefinitions, the runner must specify both paths.
+
+Without proper glue configuration, Cucumber won’t find the steps.
+
+2.6 Plugins and Reports
+
+Cucumber supports multiple plugins:
+
+pretty → Prints steps in console.
+
+html:target/cucumber-report.html → Generates HTML report.
+
+json:target/cucumber.json → JSON report for integrations.
+
+2.7 Quick Recap
+
+Feature files describe behavior in Gherkin.
+
+Step definitions implement the behavior in Java.
+
+Runner class executes scenarios.
+
+Glue code connects features and steps.
+
+Plugins generate reports for analysis.
+
+2.8 Practice Exercise
+
+Task:
+
+Write a feature file for adding a product to cart.
+
+Implement step definitions with parameters ({string}).
+
+Run the test and generate an HTML report.
+
+===========================================================
+
+Chapter 3: Scenario Outline & Parameters
+
+3.1 Why Scenario Outline?
+
+A Scenario Outline allows you to run the same scenario multiple times with different sets of data.
+
+Instead of writing separate scenarios for each input, you define one template and provide examples.
+
+This makes tests data-driven and reduces duplication.
+
+3.2 Syntax of Scenario Outline
+
+gherkin
+
+Scenario Outline: Login with multiple credentials
+
+Given the user is on the login page
+
+When the user enters "<username>" and "<password>"
+
+Then the login should be "<status>"
+
+Examples:
+
+| username | password | status |
+
+| admin | admin123 | success |
+
+| guest | guest123 | failure |
+
+| rajii | wrongpwd | failure |
+
+Explanation:
+
+<username>, <password>, <status> → placeholders.
+
+Examples table provides values for each run.
+
+Cucumber executes the scenario once for each row in the table.
+
+3.3 Step Definitions with Parameters
+
+java
+
+import io.cucumber.java.en.*;
+
+public class LoginOutlineSteps {
+
+@Given("the user is on the login page")
+
+public void userOnLoginPage() {
+
+System.out.println("Navigating to login page...");
+
+}
+
+@When("the user enters {string} and {string}")
+
+public void userEntersCredentials(String username, String password) {
+
+System.out.println("Entered Username: " + username);
+
+System.out.println("Entered Password: " + password);
+
+}
+
+@Then("the login should be {string}")
+
+public void loginStatus(String status) {
+
+System.out.println("Expected login result: " + status);
+
+}
+
+}
+
+Explanation:
+
+{string} → Matches the placeholders in the feature file.
+
+Each row in the Examples table passes values into these parameters.
+
+The test runs three times (once per row).
+
+3.4 Background Keyword
+
+The Background keyword defines steps that are common to all scenarios in a feature.
+
+It runs before each scenario.
+
+Example:
+
+gherkin
+
+Feature: Shopping cart
+
+Background:
+
+Given the user is logged in
+
+Scenario: Add product to cart
+
+When the user adds "Laptop" to the cart
+
+Then the cart should contain "Laptop"
+
+Scenario: Remove product from cart
+
+When the user removes "Laptop" from the cart
+
+Then the cart should be empty
+
+Explanation:
+
+Background ensures the user is logged in before every scenario.
+
+Avoids repeating the same step in each scenario.
+
+3.5 Runner Class (unchanged)
+
+java
+
+@RunWith(Cucumber.class)
+
+@CucumberOptions(
+
+features = "src/test/resources/features",
+
+glue = {"stepDefinitions"},
+
+plugin = {"pretty", "html:target/cucumber-report.html"}
+
+)
+
+public class OutlineTestRunner {
+
+}
+
+3.6 Quick Recap
+
+Scenario Outline → Runs the same scenario with multiple data sets.
+
+Examples Table → Provides input/output values.
+
+Parameters → Passed into step definitions using {string}.
+
+Background → Defines common preconditions for all scenarios.
+
+3.7 Practice Exercise
+
+Task:
+
+Write a Scenario Outline for a search functionality where the user searches for multiple products (Laptop, Mobile, Tablet).
+
+Use a Background step to ensure the user is on the homepage before each scenario.
+
+Implement step definitions with parameters.
+
+=================================================
+
+Chapter 4: Hooks, Tags & Background
+
+4.1 Hooks in Cucumber
+
+Hooks are special methods that run before or after each scenario. They help with setup and teardown tasks.
+
+@Before → Runs before each scenario.
+
+@After → Runs after each scenario.
+
+@BeforeStep / @AfterStep → Run before/after each step (optional).
+
+Example:
+
+java
+
+import io.cucumber.java.Before;
+
+import io.cucumber.java.After;
+
+public class Hooks {
+
+@Before
+
+public void setUp() {
+
+System.out.println("Launching browser...");
+
+}
+
+@After
+
+public void tearDown() {
+
+System.out.println("Closing browser...");
+
+}
+
+}
+
+Explanation:
+
+Hooks reduce duplication by handling common tasks (like opening/closing browsers).
+
+They ensure a clean environment for each scenario.
+
+4.2 Tags in Cucumber
+
+Tags allow you to group scenarios and run them selectively.
+
+Example Feature File:
+
+gherkin
+
+@SmokeTest
+
+Feature: Login functionality
+
+@Positive
+
+Scenario: Successful login
+
+Given the user is on the login page
+
+When the user enters valid credentials
+
+Then the user should be redirected to the homepage
+
+@Negative
+
+Scenario: Unsuccessful login
+
+Given the user is on the login page
+
+When the user enters invalid credentials
+
+Then an error message should be displayed
+
+Runner Class with Tags:
+
+java
+
+@RunWith(Cucumber.class)
+
+@CucumberOptions(
+
+features = "src/test/resources/features",
+
+glue = {"stepDefinitions"},
+
+tags = "@SmokeTest",
+
+plugin = {"pretty", "html:target/cucumber-report.html"}
+
+)
+
+public class TaggedTestRunner {
+
+}
+
+Explanation:
+
+@SmokeTest runs only smoke scenarios.
+
+Multiple tags can be combined (@Positive and @SmokeTest).
+
+Tags help organize large test suites.
+
+4.3 Background Keyword (Recap from Chapter 3)
+
+Background defines common steps that run before each scenario in a feature.
+
+Useful for login, navigation, or setup steps.
+
+Example:
+
+gherkin
+
+Feature: Shopping cart
+
+Background:
+
+Given the user is logged in
+
+Scenario: Add product to cart
+
+When the user adds "Laptop" to the cart
+
+Then the cart should contain "Laptop"
+
+Scenario: Remove product from cart
+
+When the user removes "Laptop" from the cart
+
+Then the cart should be empty
+
+4.4 Combining Hooks, Tags & Background
+
+Hooks handle technical setup/teardown (browser, DB connections).
+
+Background handles business-level preconditions (user logged in).
+
+Tags allow selective execution (smoke, regression, etc.).
+
+Together, they make test suites organized, reusable, and efficient.
+
+4.5 Quick Recap
+
+Hooks run before/after scenarios for setup/cleanup.
+
+Tags group scenarios for selective execution.
+
+Background defines common steps for all scenarios in a feature.
+
+Combining them improves test management and scalability.
+
+4.6 Practice Exercise
+
+Task:
+
+Create a feature file for search functionality.
+
+Use a Background step to ensure the user is on the homepage.
+
+Add two scenarios: one positive search, one negative search.
+
+Tag them as @Positive and @Negative.
+
+Implement hooks to open/close the browser.
+
+Run only the @Positive scenario using tags.
+
+=================================================
+
+Chapter 5: Scenario Management in Cucumber
+
+5.1 Skipping Scenarios
+
+Sometimes you may want to skip a scenario temporarily (e.g., feature not ready, bug pending).
+
+Ways to skip:
+
+Use @Ignore annotation in JUnit.
+
+Use tags and exclude them in the runner.
+
+Example Feature File:
+
+gherkin
+
+@Skip
+
+Scenario: Payment with expired card
+
+Given the user is on the payment page
+
+When the user enters expired card details
+
+Then the payment should be declined
+
+Runner Class (excluding skipped scenarios):
+
+java
+
+@RunWith(Cucumber.class)
+
+@CucumberOptions(
+
+features = "src/test/resources/features",
+
+glue = {"stepDefinitions"},
+
+tags = "not @Skip",
+
+plugin = {"pretty", "html:target/cucumber-report.html"}
+
+)
+
+public class SkipTestRunner {
+
+}
+
+Explanation:
+
+tags = "not @Skip" → excludes scenarios tagged with @Skip.
+
+This way, skipped scenarios remain documented but won’t run.
+
+5.2 Rerunning Failed Test Cases
+
+Cucumber allows rerunning only failed scenarios to save time.
+
+Steps:
+
+Add rerun plugin in runner.
+
+Failed scenarios are logged in a file.
+
+Re-run using that file.
+
+Runner Class with Rerun Plugin:
+
+java
+
+@RunWith(Cucumber.class)
+
+@CucumberOptions(
+
+features = "src/test/resources/features",
+
+glue = {"stepDefinitions"},
+
+plugin = {"pretty", "html:target/cucumber-report.html", "rerun:target/rerun.txt"}
+
+)
+
+public class RerunTestRunner {
+
+}
+
+Explanation:
+
+rerun:target/rerun.txt → stores failed scenarios.
+
+You can create another runner to execute only those scenarios.
+
+Second Runner for Failed Scenarios:
+
+java
+
+@RunWith(Cucumber.class)
+
+@CucumberOptions(
+
+features = "@target/rerun.txt",
+
+glue = {"stepDefinitions"},
+
+plugin = {"pretty", "html:target/rerun-report.html"}
+
+)
+
+public class FailedTestRunner {
+
+}
+
+5.3 Organizing Feature Files
+
+As projects grow, feature files must be structured properly.
+
+Best Practices:
+
+Group features by modules (e.g., login.feature, search.feature, cart.feature).
+
+Place them under src/test/resources/features.
+
+Use meaningful scenario names.
+
+Keep steps short and readable.
+
+Example Folder Structure:
+
+Code
+
+src
+
+└── test
+
+└── resources
+
+└── features
+
+├── login.feature
+
+├── search.feature
+
+└── cart.feature
+
+5.4 Quick Recap
+
+Scenarios can be skipped using tags.
+
+Failed scenarios can be rerun using the rerun plugin.
+
+Organizing feature files improves readability and maintainability.
+
+5.5 Practice Exercise
+
+Task:
+
+Create a feature file for payment functionality with two scenarios: one valid payment, one invalid payment.
+
+Tag the invalid payment scenario as @Skip.
+
+Configure the runner to exclude skipped scenarios.
+
+Add rerun plugin to capture failed tests.
+
+Run the failed scenarios separately using a second runner.
