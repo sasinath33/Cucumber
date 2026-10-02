@@ -1,0 +1,435 @@
+Datatable
+==========
+Chapter 6: Data-Driven Testing with Data Tables
+
+6.1 Why Data Tables?
+
+In real-world testing, scenarios often require multiple sets of input data.
+
+Cucumber provides Data Tables to pass structured data into step definitions.
+
+This makes tests flexible, reusable, and scalable.
+
+6.2 Syntax of Data Tables
+
+Data tables are written directly inside the scenario steps.
+
+Example Feature File:
+
+gherkin
+
+Feature: User Registration
+
+Scenario: Register multiple users
+
+Given the following users exist:
+
+| name | email | password |
+
+| Rajii | rajii@test.com | pass123 |
+
+| John | john@test.com | john456 |
+
+| Priya | priya@test.com | priya789 |
+
+Explanation:
+
+The table contains multiple rows of user data.
+
+Each row represents one set of inputs.
+
+Step definitions can read this table and process it.
+
+6.3 Step Definitions with Data Tables
+
+java
+
+import io.cucumber.java.en.*;
+
+import io.cucumber.datatable.DataTable;
+
+import java.util.List;
+
+import java.util.Map;
+
+public class RegistrationSteps {
+
+@Given("the following users exist:")
+
+public void usersExist(DataTable dataTable) {
+
+List<Map<String, String>> users = dataTable.asMaps(String.class, String.class);
+
+for (Map<String, String> user : users) {
+
+System.out.println("Registering user: " + user.get("name"));
+
+System.out.println("Email: " + user.get("email"));
+
+System.out.println("Password: " + user.get("password"));
+
+}
+
+}
+
+}
+
+Explanation:
+
+DataTable → Represents the table from the feature file.
+
+asMaps() → Converts table into a list of maps (each row is a map).
+
+Each row can be accessed by column names (name, email, password).
+
+6.4 Using Lists Instead of Maps
+
+If the table has only one column, you can use a list.
+
+Feature File:
+
+gherkin
+
+Scenario: Search multiple products
+
+Given the user searches for products:
+
+| Laptop |
+
+| Mobile |
+
+| Tablet |
+
+Step Definition:
+
+java
+
+@Given("the user searches for products:")
+
+public void searchProducts(DataTable dataTable) {
+
+List<String> products = dataTable.asList(String.class);
+
+for (String product : products) {
+
+System.out.println("Searching for: " + product);
+
+}
+
+}
+
+6.5 Runner Class (unchanged)
+
+java
+
+@RunWith(Cucumber.class)
+
+@CucumberOptions(
+
+features = "src/test/resources/features",
+
+glue = {"stepDefinitions"},
+
+plugin = {"pretty", "html:target/cucumber-report.html"}
+
+)
+
+public class DataDrivenTestRunner {
+
+}
+
+6.6 Quick Recap
+
+Data Tables allow structured input directly in feature files.
+
+asMaps() → For multi-column tables.
+
+asList() → For single-column tables.
+
+Data-driven testing reduces duplication and improves flexibility.
+
+6.7 Practice Exercise
+
+Task:
+
+Write a feature file for login functionality with multiple users.
+
+Use a data table with columns: username, password, status.
+
+Implement step definitions to print each user’s login attempt.
+
+Run the test and verify that all rows are processed.
+
+===========================================================
+
+list --> one column without heading
+
+lists --> multiple column without heading
+
+map --> one column with heading
+
+maps --> multiple column with heading
+
+============================
+
+Code
+Fullscreen
+Runner
+
+==========
+
+package runner;
+
+import io.cucumber.testng.AbstractTestNGCucumberTests;
+
+import io.cucumber.testng.CucumberOptions;
+
+@CucumberOptions(features = "src/test/resources/Features/datatableConcept.feature",
+
+glue = "stepDefinitions",
+
+plugin = { "pretty" }
+
+)
+
+public class TestRunner extends AbstractTestNGCucumberTests {
+
+}
+
+============================================================================================
+
+feature file (datatableConcept.feature)
+
+=============
+
+Feature: dataTable checking
+
+
+
+Background:
+
+Given user enter the url test
+
+
+
+Scenario: list
+
+When user enter the username in test
+
+| Arun |
+
+| Balu |
+
+| Jeeva |
+
+| Sasinath |
+
+
+
+Scenario: lists
+
+When user enter the username email in test
+
+| Arun | arun@gmail.com |
+
+| Balu | balu@gmail.com |
+
+| Jeeva | jeeva@123.com |
+
+| Sasinath | sasinath@123.com |
+
+
+
+Scenario: map
+
+When user enter the details for one person
+
+| name | Techpanda |
+
+| email | techpanda@gmail.com |
+
+
+
+Scenario: maps
+
+When user enter the details for multiple
+
+| name | email | phone |
+
+| Rajii | rajii@test.com | 1234567890 |
+
+| John | john@test.com | 9080706054 |
+
+| Priya | priya@test.com | 9876543210 |
+
+===========================================
+
+package stepDefinitions;
+
+
+
+import java.util.List;
+
+import java.util.Map;
+
+
+
+import org.openqa.selenium.By;
+
+import org.openqa.selenium.WebDriver;
+
+import org.openqa.selenium.WebElement;
+
+import org.openqa.selenium.chrome.ChromeDriver;
+
+
+
+import io.cucumber.java.After;
+
+import io.cucumber.java.Before;
+
+import io.cucumber.java.en.Given;
+
+import io.cucumber.java.en.When;
+
+
+
+public class DataTable {
+
+
+
+WebDriver driver;
+
+
+
+@Before
+
+public void openChrome() {
+
+driver=new ChromeDriver();
+
+}
+
+
+
+@Given("user enter the url test")
+
+public void user_enter_the_url_test() {
+
+driver.get("https://testautomationpractice.blogspot.com/");
+
+}
+
+
+
+@When("user enter the username in test")
+
+public void user_enter_the_username_in_test(io.cucumber.datatable.DataTable dataTable) {
+
+List<String> asList = dataTable.asList();
+
+for (String s : asList) {
+
+testAutomation1(s);
+
+}
+
+}
+
+
+
+private void testAutomation1(String s) {
+
+
+
+WebElement element = driver.findElement(By.id("name"));
+
+element.sendKeys(s);
+
+driver.navigate().refresh();
+
+}
+
+
+
+@When("user enter the username email in test")
+
+public void user_enter_the_username_email_in_test(io.cucumber.datatable.DataTable dataTable) {
+
+List<List<String>> asLists = dataTable.asLists();
+
+
+
+for (List<String> as : asLists) {
+
+testAutomation2(as.get(0), as.get(1));
+
+}
+
+}
+
+
+
+private void testAutomation2(String string, String string2) {
+
+// TODO Auto-generated method stub
+
+WebElement element = driver.findElement(By.id("name"));
+
+element.sendKeys(string);
+
+WebElement element2 = driver.findElement(By.id("email"));
+
+element2.sendKeys(string2);
+
+driver.navigate().refresh();
+
+
+
+}
+
+
+
+@When("user enter the details for one person")
+
+public void user_enter_the_details_for_one_person(io.cucumber.datatable.DataTable dataTable) {
+
+Map<String, String> asMap = dataTable.asMap();
+
+testAutomation2(asMap.get("name"), asMap.get("email"));
+
+}
+
+
+
+@When("user enter the details for multiple")
+
+public void user_enter_the_details_for_multiple(io.cucumber.datatable.DataTable dataTable) {
+
+List<Map<String, String>> asMaps = dataTable.asMaps();
+
+
+
+for (Map<String, String> as : asMaps) {
+
+testAutomation2(as.get("name"), as.get("email"));
+
+}
+
+
+
+}
+
+
+
+@After
+
+public void close() {
+
+driver.quit();
+
+}
+
+
+
+}
